@@ -2,8 +2,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-from HandMadePerceptron import PerceptronClassifier
-from util import label_to_color
+from HandMadeNNs import OneLayerClassifier
+from util import label_to_color, accuracy
 
 
 def lab_2_1():
@@ -75,12 +75,42 @@ def lab_2_2():
 
     X = np.vstack([np.random.normal(size=(points_around, 2)) + p for p in support_points])
     Y = np.vstack([np.full((points_around, 1), i + 1, dtype='int') for i in range(support_points.shape[0])])
+    labels = [i + 1 for i in range(np.unique(Y).size)]
     assert X.shape[0] == Y.shape[0]
 
     plt.scatter(X[:, 0], X[:, 1], color=[label_to_color(y[0]) for y in Y])
     plt.show()
 
     # training
+    idx = np.arange(X.shape[0])
+    np.random.shuffle(idx)
+    split = 0.2
+
+    split = int((1 - split) * X.shape[0])
+    train_idx, test_idx = idx[:split], idx[split:]
+    X_train, Y_train = X[train_idx], Y[train_idx]
+    X_test, Y_test = X[test_idx], Y[test_idx]
+
+    clsfr = OneLayerClassifier(X.shape[1], len(labels), lr=1.e-2)
+
+    epochs = 10
+    for i in range(epochs):
+        # train cycle
+        for x, y in zip(X_train, Y_train):
+            one_hot = np.zeros(len(labels), dtype='int')
+            one_hot[labels.index(y)] = 1
+            clsfr.backward(x, one_hot)
+
+        # test_cycle
+        Y_pred = np.zeros_like(Y_test)
+        for j, (x, y) in enumerate(zip(X_test, Y_test)):
+            Y_pred[j] = labels[clsfr.predict(x)]
+
+        # logging
+        parameters = clsfr.get_parameters()
+        print(f'Epoch {i + 1} finished; accuracy: {accuracy(Y_pred, Y_test)}')
+        print('Parameters;\n weights: \n', parameters[0], '\nbiases: ', parameters[1])
+        print()
 
 
 def main():
