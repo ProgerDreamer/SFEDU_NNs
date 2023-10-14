@@ -1,9 +1,32 @@
 import numpy as np
 
-from util import softmax
+from util import softmax, sigmoid
 
 
-class OneLayerClassifier:
+class BinaryClassifier:
+    def __init__(self, input_dim, lr=1.e-1):
+        self.w = np.random.normal(size=input_dim)
+        self.b = 0.
+        self.input_dim = input_dim
+        self.lr = lr
+
+    def forward(self, x):
+        return sigmoid(np.dot(self.w, x) + self.b)
+
+    def backward(self, x, y_true, y_pred):
+        dw = self.lr * 2 * (y_true - y_pred) * y_pred * (1 - y_pred) * x
+        db = self.lr * 2 * (y_true - y_pred) * y_pred * (1 - y_pred)
+        self.w += dw
+        self.b += db
+
+    def predict(self, x):
+        return 1 if self.forward(x) > 0.5 else 0
+
+    def get_parameters(self):
+        return self.w, self.b
+
+
+class PerceptronClassifier:
 
     def __init__(self, input_dim, num_classes, lr=1.e-1):
         self.w = np.random.normal(size=(input_dim, num_classes))
@@ -16,8 +39,9 @@ class OneLayerClassifier:
         return softmax(np.dot(x, self.w) + self.b)
 
     def backward(self, x, y_true_oh):
-        d_w = np.dot(x.reshape(-1, 1), y_true_oh.reshape(1, -1)) * self.lr
-        d_b = y_true_oh * self.lr
+        out = self.forward(x)
+        d_w = np.dot(x.reshape(-1, 1), (y_true_oh - out).reshape(1, -1)) * self.lr
+        d_b = (y_true_oh - out) * self.lr
         self.w += d_w
         self.b += d_b
 

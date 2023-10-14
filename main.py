@@ -2,8 +2,11 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-from HandMadeNNs import OneLayerClassifier
-from util import label_to_color, accuracy
+from sklearn.linear_model import Perceptron
+
+from HandMadeNNs import PerceptronClassifier, BinaryClassifier
+from util import *
+from plot_util import *
 
 
 def lab_2_1():
@@ -67,16 +70,12 @@ def lab_2_1():
 
 
 def lab_2_2():
-    # 3 classes
+    # 4 classes
 
     # data generation
-    support_points = np.array([[5, 0], [0, 3], [-2, -4]])
-    points_around = 40
-
-    X = np.vstack([np.random.normal(size=(points_around, 2)) + p for p in support_points])
-    Y = np.vstack([np.full((points_around, 1), i + 1, dtype='int') for i in range(support_points.shape[0])])
-    labels = [i + 1 for i in range(np.unique(Y).size)]
-    assert X.shape[0] == Y.shape[0]
+    support_points = np.array([[1, 5], [1, 0], [-1, 1], [-1, -1], [2, -2]])
+    X, Y = gen_gauss_for_clsfr(support_points, labels=[0, 1, 2, 2, 3], S=[0.3, 0.2, 0.4, 0.4, 0.3])
+    labels = np.unique(Y)
 
     plt.scatter(X[:, 0], X[:, 1], color=[label_to_color(y[0]) for y in Y])
     plt.show()
@@ -91,14 +90,23 @@ def lab_2_2():
     X_train, Y_train = X[train_idx], Y[train_idx]
     X_test, Y_test = X[test_idx], Y[test_idx]
 
-    clsfr = OneLayerClassifier(X.shape[1], len(labels), lr=1.e-2)
+    clsfr = PerceptronClassifier(X.shape[1], len(labels), lr=1.e-3)
 
-    epochs = 10
+    epochs = 100
+
+    Y_pred = np.zeros_like(Y_test)
+    for j, (x, y) in enumerate(zip(X_test, Y_test)):
+        Y_pred[j] = labels[clsfr.predict(x)]
+    parameters = clsfr.get_parameters()
+    print(f'Not trained; accuracy: {accuracy(Y_pred, Y_test)}')
+    print('Parameters;\n weights: \n', parameters[0], '\nbiases: ', parameters[1])
+    print()
+
     for i in range(epochs):
         # train cycle
         for x, y in zip(X_train, Y_train):
             one_hot = np.zeros(len(labels), dtype='int')
-            one_hot[labels.index(y)] = 1
+            one_hot[y] = 1
             clsfr.backward(x, one_hot)
 
         # test_cycle
@@ -112,11 +120,77 @@ def lab_2_2():
         print('Parameters;\n weights: \n', parameters[0], '\nbiases: ', parameters[1])
         print()
 
+    # skl perceptron
+    clsfr = Perceptron()
+    clsfr.fit(X_train, np.squeeze(Y_train))
+    score = clsfr.score(X_test, np.squeeze(Y_test))
+    print(f'Sklearn perceptron score for comparison: {score}')
+
+
+# def lab_2_2_perceptron():
+#     # binary classification
+#
+#     # data generation
+#     support_points = np.array([[5, 0], [0, 3]])
+#     points_around = 100
+#
+#     X = np.vstack([np.random.normal(size=(points_around, 2)) + p for p in support_points])
+#     Y = np.vstack([np.full((points_around, 1), i, dtype='int') for i in range(support_points.shape[0])])
+#     assert X.shape[0] == Y.shape[0]
+#
+#     fig, ax = plt.subplots()
+#     ax.scatter(X[:, 0], X[:, 1], color=[label_to_color(y[0]) for y in Y])
+#     fig.savefig('./lab1/data.png')
+#     plt.close(fig)
+#
+#     # training
+#     idx = np.arange(X.shape[0])
+#     np.random.shuffle(idx)
+#     split = 0.2
+#
+#     split = int((1 - split) * X.shape[0])
+#     train_idx, test_idx = idx[:split], idx[split:]
+#     X_train, Y_train = X[train_idx], Y[train_idx]
+#     X_test, Y_test = X[test_idx], Y[test_idx]
+#
+#     clsfr = BinaryClassifier(X.shape[1], lr=1.e-2)
+#
+#     epochs = 10
+#     for i in range(epochs):
+#         # train cycle
+#         for x, y in zip(X_train, Y_train):
+#             y_pred = clsfr.forward(x)
+#             clsfr.backward(x, y, y_pred)
+#
+#         # test_cycle
+#         Y_pred = np.zeros_like(Y_test)
+#         for j, (x, y) in enumerate(zip(X_test, Y_test)):
+#             Y_pred[j] = clsfr.predict(x)
+#
+#         # logging
+#         parameters = clsfr.get_parameters()
+#         print(f'Epoch {i + 1} finished; accuracy: {accuracy(Y_pred, Y_test)}')
+#         print('Parameters;\n weights: \n', parameters[0], '\nbiases: ', parameters[1])
+#         print()
+#
+#     fig, ax = plt.subplots()
+#     plot_linear_boundaries(clsfr, ax, [-4, 8], [-4, 10],
+#                            colors=[label_to_color(0), label_to_color(1)])
+#     ax.scatter(X_train[:, 0], X_train[:, 1], color=[label_to_color(y[0]) for y in Y_train])
+#     fig.savefig('./lab1/train_with_boundaries.png')
+#
+#     fig, ax = plt.subplots()
+#     plot_linear_boundaries(clsfr, ax, [-4, 8], [-4, 10],
+#                            colors=[label_to_color(0), label_to_color(1)])
+#     ax.scatter(X_test[:, 0], X_test[:, 1], color=[label_to_color(y[0]) for y in Y_test])
+#     fig.savefig('./lab1/test_with_boundaries.png')
+
 
 def main():
     np.random.seed(0)
     # lab_2_1()
     lab_2_2()
+    # lab_2_2_perceptron()
     pass
 
 
