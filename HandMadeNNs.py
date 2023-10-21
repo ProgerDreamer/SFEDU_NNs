@@ -13,9 +13,10 @@ class BinaryClassifier:
     def forward(self, x):
         return sigmoid(np.dot(self.w, x) + self.b)
 
-    def backward(self, x, y_true, y_pred):
-        dw = self.lr * 2 * (y_true - y_pred) * y_pred * (1 - y_pred) * x
-        db = self.lr * 2 * (y_true - y_pred) * y_pred * (1 - y_pred)
+    def backward(self, x, y_true):
+        logit = self.forward(x)
+        dw = self.lr * 2 * (y_true - logit) * logit * (1 - logit) * x
+        db = self.lr * 2 * (y_true - logit) * logit * (1 - logit)
         self.w += dw
         self.b += db
 
@@ -38,7 +39,9 @@ class PerceptronClassifier:
     def forward(self, x):
         return softmax(np.dot(x, self.w) + self.b)
 
-    def backward(self, x, y_true_oh):
+    def backward(self, x, y_true):
+        y_true_oh = np.zeros(self.num_classes, dtype='int')
+        y_true_oh[y_true] = 1
         out = self.forward(x)
         d_w = np.dot(x.reshape(-1, 1), (y_true_oh - out).reshape(1, -1)) * self.lr
         d_b = (y_true_oh - out) * self.lr

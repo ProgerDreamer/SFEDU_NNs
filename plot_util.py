@@ -2,24 +2,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def label_to_color(label: int):
-    d = {0: 'r', 1: 'b', 2: 'purple',
-         3: 'y', 4: 'b'}
-    return d[label]
+LABEL_TO_COLOR = {0: 'r', 1: 'b', 2: 'purple',
+                  3: 'y', 4: 'black'}
 
 
-def plot_linear_boundaries(one_layer_clsfr, ax, xlim, ylim,
-                           colors, alpha=0.5):
-    w, b = one_layer_clsfr.get_parameters()
-    assert w.shape == (2, )
-    assert len(colors) == 2
+def plot_linear_boundaries(clsfr, ax, xlim, ylim,
+                           grid_resolution=400, alpha=0.5):
+    assert clsfr.input_dim == 2
 
-    def line(x):
-        return (b - w[0] * x) / w[1]
+    X1, X2 = np.meshgrid(np.linspace(*xlim, grid_resolution),
+                         np.linspace(*ylim, grid_resolution))
+    data = np.hstack((X1.ravel().reshape(-1, 1), X2.ravel().reshape(-1, 1)))
+    Y_pred = np.apply_along_axis(lambda x: clsfr.predict(x), 1, data)
 
-    X = np.linspace(*xlim, 1000)
-    Y = line(X)
+    levels = np.arange(-0.5, clsfr.num_classes, 1.)
+    colors = [LABEL_TO_COLOR[i] for i in range(clsfr.num_classes)]
+    ax.contourf(X1, X2,
+                Y_pred.reshape(grid_resolution, grid_resolution),
+                levels=levels, colors=colors, alpha=alpha)
 
-    ax.fill_between(X, ylim[0], Y, facecolor=colors[0], alpha=alpha)
-    ax.fill_between(X, Y, ylim[1], facecolor=colors[1], alpha=alpha)
+
+def basic_scatter(ax, x, y, color=None, xlim=None, ylim=None):
+    ax.scatter(x, y, color=color)
+    if xlim is None:
+        xlim = (None, ) * 2
+    if ylim is None:
+        ylim = (None, ) * 2
+    ax.set_xlim(*xlim)
+    ax.set_ylim(*ylim)
+
 

@@ -46,3 +46,15 @@ def gen_gauss_for_clsfr(mus, gen_for_each=100, S=1., labels=None):
                    for l, reps in zip(labels, gen_for_each)])
     return X, Y
 
+
+def split_and_shuffle(X, Y, test_part=0.2):
+    idx = np.arange(X.shape[0])
+    np.random.shuffle(idx)
+
+    test_part = int((1 - test_part) * X.shape[0])
+    train_idx, test_idx = idx[:test_part], idx[test_part:]
+    X_train, Y_train = X[train_idx], Y[train_idx]
+    X_test, Y_test = X[test_idx], Y[test_idx]
+
+    return X_train, X_test, Y_train, Y_test
+
