@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.linear_model import Perceptron
 
-from HandMadeNNs import PerceptronClassifier, BinaryClassifier
+from HandMadeNNs import *
 from util import *
 from plot_util import *
 from ml_util import *
@@ -133,8 +133,16 @@ def lab_2_2():
 
 
 def lab_3():
-    base_points = np.array([[1, 5], [1, 0], [-1, 1], [-1, -1], [2, -2]])
-    base_labels = np.array([0, 1, 2, 2, 3]).reshape(-1, 1)
+    linear = False
+    if linear:
+        # linear case
+        base_points = np.array([[1, 5], [1, 0], [-1, 1], [-1, -1], [2, -2]])
+        base_labels = np.array([0, 1, 2, 2, 3]).reshape(-1, 1)
+    else:
+        # no linear case
+        base_points = np.array([[-3, -3], [3, 3], [-3, 3], [3, -3], [0, 2], [5, 0]])
+        base_labels = np.array([0, 0, 1, 1, 2, 2]).reshape(-1, 1)
+
     labels = np.unique(base_labels)
 
     epochs = 100
@@ -142,7 +150,7 @@ def lab_3():
 
     for scale in (0.2, 0.5, 1., 2., 5.):
         X, Y = gen_gauss_for_clsfr(base_points * scale, labels=base_labels.ravel(),
-                                   S=[0.3, 0.2, 0.4, 0.4, 0.3],
+                                   S=0.3,
                                    gen_for_each=50)
 
         fig, ax = plt.subplots()
@@ -154,7 +162,10 @@ def lab_3():
         X_train, X_test, Y_train, Y_test = split_and_shuffle(X, Y)
 
         for lr in (1.e-3, 1.e-2, 1.e-1, 1.):
-            clsfr = PerceptronClassifier(X.shape[1], len(labels), lr=lr)
+            if linear:
+                clsfr = PerceptronClassifier(X.shape[1], len(labels), lr=lr)
+            else:
+                clsfr = MLPClassifier(X.shape[1], len(labels), (6, 6, 6), lr=lr)
             learning_curve = fit_cycle(clsfr, X_train, X_test, Y_train, Y_test,
                                        metrics=(('accuracy', accuracy), ), verbose=True)[:, 0]
             fig, ax = plt.subplots()

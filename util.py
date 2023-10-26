@@ -4,7 +4,13 @@ import numpy as np
 
 
 def sigmoid(x):
-    return np.exp(x) / (1 + np.exp(x))
+    z = np.exp(x)
+    return z / (1 + z)
+
+
+def tanh(x):
+    z = np.exp(x)
+    return (z + 1. / z) / (z - 1. / z)
 
 
 def softmax(x):
@@ -45,6 +51,11 @@ def gen_gauss_for_clsfr(mus, gen_for_each=100, S=1., labels=None):
     Y = np.vstack([np.array([l for _ in range(reps)]).reshape(-1, 1)
                    for l, reps in zip(labels, gen_for_each)])
     return X, Y
+
+
+def get_nonlinear_clsfn_data():
+    X1 = np.linspace()
+    X2 = np.linspace()
 
 
 def split_and_shuffle(X, Y, test_part=0.2):
